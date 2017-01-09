@@ -1,0 +1,97 @@
+<html>
+    <head>
+        <title>clik</title>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
+
+            .c {
+                position: absolute;
+                background-color: #aad;
+                width: 100px;
+                height: 100px; 
+                border-radius: 50%;
+                transform: scale(0.01);
+                transition: transform 1s ease;
+            }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.0.1/Rx.min.js"></script>
+    </head>
+    <body>
+        <script>
+            const distance = ([x1, y1], [x2, y2]) => Math.sqrt(
+                Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)
+            )
+
+            const allRectPoints = ([x1, y1, x2, y2]) => [
+                [x1, y1],
+                [x1, y2],
+                [x2, y2],
+                [x2, y1],
+            ]
+
+            const calculateScale = (point, rect, raduis) => Math.max(
+                ...allRectPoints(rect).map(
+                    rectPoint => distance(point, rectPoint)
+                )
+            ) / raduis
+
+            const { Observable } = Rx
+
+            const randomColor = (s = 75, l = 50) => Observable.create(observer => {
+                const color = `hsl(${Math.round(Math.random() * 360)}, ${s}%,${l}%)`
+
+                observer.next(color)
+            });
+
+            const bollRaduis = Observable.of(50);
+            const viewCoords = Observable
+                .fromEvent(window, 'resize', () => window)
+                .startWith(window)
+                .map(window => [0, 0, window.innerWidth, window.innerHeight])
+
+            const clicks = Observable.fromEvent(document, 'click', e => [e.clientX, e.clientY])
+            
+            const scales = clicks.withLatestFrom(viewCoords, bollRaduis, calculateScale) 
+
+            const rc = randomColor()
+            const colors = clicks.switchMap(() => rc)
+
+            const positions = clicks.withLatestFrom(
+                bollRaduis,
+                ([x, y], radius) => [x - radius, y - radius]
+            ).do(x => console.log(x))
+
+            const allData = clicks.withLatestFrom(
+                positions,
+                scales,
+                colors,
+                (_ ,position, scale, color) => ({ position, scale, color })
+            )
+
+            const body = document.querySelector('body')
+            allData.subscribe( ({ position, scale, color }) => {
+                const div = document.createElement('div');
+                body.appendChild(div)
+                div.className = 'c';
+                div.style.background = color
+                div.style.left = position[0]
+                div.style.top = position[1]
+                setTimeout(() => {
+                    div.style.transform = `scale(${scale})`
+                }, 100)
+
+                setTimeout(() => {
+                    body.removeChild(div)
+                    body.style.background = color
+                }, 1100)
+            } )
+
+            colors.subscribe(function (x) {
+                console.log(x)
+            })
+        </script>
+    </body>
+</html>
