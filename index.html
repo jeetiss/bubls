@@ -10,10 +10,10 @@
             .c {
                 position: absolute;
                 background-color: #aad;
-                width: 100px;
-                height: 100px; 
+                width: 1000px;
+                height: 1000px; 
                 border-radius: 50%;
-                transform: scale(0.01);
+                transform: scale(0.001);
                 transition: transform 1s ease;
             }
         </style>
@@ -40,13 +40,14 @@
 
             const { Observable } = Rx
 
+            let i = 0;
             const randomColor = (s = 75, l = 50) => Observable.create(observer => {
-                const color = `hsl(${Math.round(Math.random() * 360)}, ${s}%,${l}%)`
+                const color = `hsl(${Math.round(++i * 37 % 360)}, ${s}%,${l}%)`
 
                 observer.next(color)
             });
 
-            const bollRaduis = Observable.of(50);
+            const bollRaduis = Observable.of(500);
             const viewCoords = Observable
                 .fromEvent(window, 'resize', () => window)
                 .startWith(window)
@@ -81,17 +82,13 @@
                 div.style.top = position[1]
                 setTimeout(() => {
                     div.style.transform = `scale(${scale})`
-                }, 100)
+                }, 50)
 
                 setTimeout(() => {
                     body.removeChild(div)
                     body.style.background = color
-                }, 1100)
+                }, 1050)
             } )
-
-            colors.subscribe(function (x) {
-                console.log(x)
-            })
         </script>
     </body>
 </html>
